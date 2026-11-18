@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       deploy:
-        description: 'Deploy validated output (also requires DEPLOY_ENABLED=true)'
+        description: 'Deploy validated output once (independent of scheduled deployment)'
         type: boolean
         default: false
 permissions:
@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: '24'
       - name: Test artifact validator
-        run: node --test scripts/validate-output.test.mjs
+        run: node --test scripts/*.test.mjs
       - uses: actions/checkout@v4
         with:
           repository: whyun-pages/iptv-sources
@@ -82,11 +82,11 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
       - name: Deployment status
-        if: vars.DEPLOY_ENABLED != 'true' || (github.event_name == 'workflow_dispatch' && !inputs.deploy)
+        if: github.ref != 'refs/heads/main' || (github.event_name == 'schedule' && vars.DEPLOY_ENABLED != 'true') || (github.event_name == 'workflow_dispatch' && !inputs.deploy)
         run: echo 'Build only. Deployment is disabled or was not requested.' >> "$GITHUB_STEP_SUMMARY"
   deploy:
     needs: build
-    if: vars.DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || inputs.deploy)
+    if: github.ref == 'refs/heads/main' && ((github.event_name == 'schedule' && vars.DEPLOY_ENABLED == 'true') || (github.event_name == 'workflow_dispatch' && inputs.deploy))
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

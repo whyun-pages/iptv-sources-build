@@ -13,7 +13,7 @@
 
 ## 首次使用：先仅构建
 
-Actions → **Build IPTV sources** → **Run workflow**，保持 `deploy` 未勾选。下载 `pages-output` 检查结果；未配置发布开关时，自动调度也只构建，不影响线上。
+Actions → **Build IPTV sources** → **Run workflow**，保持 `deploy` 未勾选。下载 `pages-output` 检查结果；未配置定时发布开关时，自动调度只构建，不影响线上。手动勾选 `deploy` 可进行单次发布，不会开启后续定时发布。
 
 ## 配置现有 Cloudflare Pages
 
@@ -27,7 +27,7 @@ Variables：
 - `PROJECT_NAME`：从 Cloudflare 控制台确认的**现有** Pages 项目名（也兼容同名 secret）。不能用 GitHub 仓库名猜测。
 - `CF_PAGES_BRANCH`：该项目当前的 production branch，必须准确匹配。
 - `CUSTOM_URL`：现有 Pages 的 HTTPS 正式域名，例如经确认的 `https://your-project.pages.dev`，不要末尾斜杠。会用于生成频道/EPG链接。
-- `DEPLOY_ENABLED`：准备就绪后设为 `true`。此后定时构建通过检查就会发布；手动运行还必须勾选 `deploy`。
+- `DEPLOY_ENABLED`：仅控制定时发布。首次验证时保持未设置或 `false`，在 main 手动运行并勾选 `deploy`，即可单次发布；确认成功后再设为 `true`，之后定时构建通过检查会自动发布。手动发布不依赖此变量，但仍须配置所有 Cloudflare 参数并通过目标与产物校验。
 - 可选：`IPTV_PROXY_IP_RANGES`、`IPTV_PROXY_PORT`，按原构建配置复制。`CLOSE_SOURCE_PROXY=true` 已保留。
 
 发布前读取 Cloudflare API，核实项目确实存在、生产分支匹配、CUSTOM_URL 属于该项目；未配置或核对失败则停止，不创建项目。随后用 Wrangler 4 Direct Upload 发布，部署链接在 Actions Summary。无需改动源仓库。
@@ -40,6 +40,6 @@ Variables：
 - 未启用 `push` 自动触发，修改配置不会自动发布。手动运行用于验收。
 - 冻结安装失败请先在源仓库修正 package.json / lockfile 一致性，不在此仓库绕过锁文件。
 - 构建成功不代表部署成功：查看 deploy job 是否跳过以及配置核验结果。
-- 本地校验器测试：`node --test scripts/validate-output.test.mjs`。
+- 本地校验器测试：`node --test scripts/*.test.mjs`。
 
 [Cloudflare Direct Upload CI 文档](https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/)
