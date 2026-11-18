@@ -6,7 +6,7 @@
 
 - GitHub Actions cron `17 */2 * * *`（UTC；北京时间每天偶数小时的第 17 分钟），以及手动触发。
 - Node.js 24、pnpm 11、冻结 lockfile 安装，`pnpm build`、`pnpm m3u`、`pnpm static`。
-- 每次清空旧产物；生成器可能吞异常，因此额外验证新鲜 channels.json、有效 M3U、合并源/TXT、静态首页、TVBox JSON、四个 EPG 的当天中国日期节目及 25 MiB 单文件上限。任何检查失败都不发布，保持线上版本。
+- 每次清空旧产物；生成器可能吞异常，因此额外验证新鲜 channels.json、有效 M3U、合并源/TXT、静态首页、TVBox JSON 及非空 lives（结构、TXT 引用和至少一个非空列表）、四个 EPG 的当天中国日期节目及 25 MiB 单文件上限。任何检查失败都不发布，保持线上版本。
 - 有意采用严格检查：任何必需 EPG/TVBox 上游故障都阻断部署，而不是发布部分数据。此检查不保证全部频道可播放，也不是完整 XML schema 校验。
 - 构建产物保留 3 天，构建日志保留 7 天；并发串行，不取消正在执行的部署。
 - Cloudflare 凭据仅传给独立部署 job，不传给源代码构建或安装依赖。

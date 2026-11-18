@@ -36,6 +36,24 @@ export function validateOutput(root, now = Date.now()) {
   const tvbox = files.filter(p => p.startsWith('tvbox/') && p.endsWith('.json'));
   assert(tvbox.length > 0, 'Missing TVBox output');
   for (const p of tvbox) JSON.parse(read(p));
+  // Source currently writes this public endpoint. Other template fields are
+  // intentionally unconstrained; remote templates can add optional fields.
+  const config = JSON.parse(read('tvbox/tvbox.json'));
+  assert(config && Array.isArray(config.lives) && config.lives.length > 0, 'Missing or empty TVBox lives');
+  let hasUsableLive = false;
+  for (const live of config.lives) {
+    assert(live && typeof live.name === 'string' && live.name.trim() && live.type === 0 && typeof live.url === 'string', 'Invalid TVBox live entry');
+    let url;
+    try { url = new URL(live.url); } catch { throw new Error('Invalid TVBox live URL'); }
+    assert(['http:', 'https:'].includes(url.protocol), 'Invalid TVBox live URL protocol');
+    // Match nested output filenames without assuming a specific site domain.
+    const marker = url.pathname.lastIndexOf('/txt/');
+    assert(marker >= 0 && url.pathname.endsWith('.txt'), 'TVBox live must reference generated TXT');
+    const relative = decodeURIComponent(url.pathname.slice(marker + 1));
+    assert(files.includes(relative), `TVBox references missing TXT: ${relative}`);
+    if (read(relative).trim()) hasUsableLive = true;
+  }
+  assert(hasUsableLive, 'TVBox lives contain no nonempty TXT playlists');
   return `Validated ${files.length} files, ${playlists.length} playlists, fresh channel metadata and all four EPG feeds.`;
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
